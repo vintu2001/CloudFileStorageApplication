@@ -14,7 +14,7 @@ public class FileMetadataService {
     private FileMetadataRepository fileMetadataRepository;
 
     //saving file metadata
-    public FileMetadata saveMetadata(String fileName, String fileType, Long fileSize){
+    public FileMetadata saveMetadata(String fileName, String fileType, Long fileSize) {
         FileMetadata metadata = new FileMetadata();
         metadata.setFileName(fileName);
         metadata.setFileType(fileType);

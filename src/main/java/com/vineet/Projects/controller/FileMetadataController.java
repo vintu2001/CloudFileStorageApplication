@@ -4,7 +4,12 @@ import com.vineet.Projects.model.FileMetadata;
 import com.vineet.Projects.service.FileMetadataService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.PathVariable;
 
 import java.io.File;
 import java.util.List;
@@ -38,12 +43,12 @@ public class FileMetadataController {
     // Endpoint to retrieve data for a specific id
 
     @GetMapping("/{id}")
-    public ResponseEntity<FileMetadata> getMetadataById(@PathVariable Long id){
+    public ResponseEntity<FileMetadata> getMetadataById(@PathVariable Long id) {
         FileMetadata metadata = fileMetadataService.getMetadataById(id);
 
-        if(metadata != null){
+        if (metadata != null) {
             return ResponseEntity.ok(metadata);
-        }else{
+        } else {
             return ResponseEntity.notFound().build();
         }
     }

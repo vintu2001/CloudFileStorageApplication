@@ -1,6 +1,11 @@
 package com.vineet.Projects.model;
 
-import jakarta.persistence.*;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Column;
+import jakarta.validation.constraints.NotBlank;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -12,9 +17,11 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false,unique = true)
+    @NotBlank(message = "Username must not be empty")
+    @Column(nullable = false, unique = true)
     private String username;
 
+    @NotBlank(message = "Password must not be empty")
     @Column(nullable = false)
     private String password;
 
