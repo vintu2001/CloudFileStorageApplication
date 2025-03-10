@@ -119,6 +119,13 @@
             <scope>test</scope>
         </dependency>
 
+        <dependency>
+            <groupId>com.google.cloud</groupId>
+            <artifactId>google-cloud-storage</artifactId>
+            <version>2.29.0</version>
+        </dependency>
+
+
     </dependencies>
 
 

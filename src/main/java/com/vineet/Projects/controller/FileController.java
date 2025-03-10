@@ -1,51 +1,78 @@
 package com.vineet.Projects.controller;
 
+import com.google.cloud.storage.Blob;
+import com.google.cloud.storage.BlobId;
+import com.google.cloud.storage.BlobInfo;
+import com.google.cloud.storage.Storage;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
+import java.io.IOException;
 
 @RestController
 @RequestMapping("/api/files")
 public class FileController {
-    public static final String UPLOAD_DIR="uploads/";
 
-    //upload a file
+    private final Storage storage;
+
+    @Value("${spring.cloud.gcp.storage.bucket}")
+    private String bucketName;
+
+    public FileController(Storage storage) {
+        this.storage = storage;
+    }
+
+    // Upload file to GCS
     @PostMapping("/upload")
     public ResponseEntity<String> uploadFile(@RequestParam("file") MultipartFile file) {
         try {
-            Path path = Paths.get(UPLOAD_DIR + file.getOriginalFilename());
-            Files.createDirectories(path.getParent());
-            Files.write(path, file.getBytes());
-            return ResponseEntity.ok("File uploaded successfully : " + file.getOriginalFilename());
+            // Create BlobId and BlobInfo for the file
+            BlobId blobId = BlobId.of(bucketName, file.getOriginalFilename());
+            BlobInfo blobInfo = BlobInfo.newBuilder(blobId).build();
 
-        }
-        catch (Exception e){
+            // Upload file to GCS
+            storage.create(blobInfo, file.getBytes());
+
+            return ResponseEntity.ok("File uploaded successfully: " + file.getOriginalFilename());
+        } catch (IOException e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error uploading file");
         }
     }
 
-
-    //download a file
+    // Download file from GCS
     @GetMapping("/download/{filename}")
     public ResponseEntity<byte[]> downloadFile(@PathVariable String filename) {
         try {
-            Path path = Paths.get(UPLOAD_DIR + filename);
-            byte[] fileBytes = Files.readAllBytes(path);
-            return ResponseEntity.ok(fileBytes);
+            Blob blob = storage.get(BlobId.of(bucketName, filename));
+
+            if (blob == null) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+            }
+
+            return ResponseEntity.ok(blob.getContent());
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
         }
     }
 
+    // Delete file from GCS
+    @DeleteMapping("/delete/{filename}")
+    public ResponseEntity<String> deleteFile(@PathVariable String filename) {
+        try {
+            BlobId blobId = BlobId.of(bucketName, filename);
+
+            boolean deleted = storage.delete(blobId);
+
+            if (deleted) {
+                return ResponseEntity.ok("File deleted successfully: " + filename);
+            } else {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("File not found: " + filename);
+            }
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error deleting file");
+        }
+    }
 }
